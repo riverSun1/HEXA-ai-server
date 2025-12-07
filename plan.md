@@ -95,7 +95,7 @@ Adapter (Web) → Application (UseCase) → Domain ← Infrastructure (DB, API)
   - 신규 회원 자동 생성
   - Redis 세션 발급
 
-- [ ] `HAIS-12` [Auth] 인증 미들웨어 - 세션 검증, 요청에 user_id 주입
+- [x] `HAIS-12` [Auth] 인증 미들웨어 - 세션 검증, 요청에 user_id 주입
 
 ### Phase 1: 병렬 개발 - Consult + Converter (동시 진행 가능 🔥)
 
