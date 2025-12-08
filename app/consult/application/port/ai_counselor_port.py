@@ -21,6 +21,8 @@ class AICounselorPort(ABC):
             AI가 생성한 인사말
         """
         pass
+
+    @abstractmethod
     def generate_response(self, session: ConsultSession, user_message: str) -> str:
         """
         사용자 메시지에 대한 AI 응답을 생성한다.

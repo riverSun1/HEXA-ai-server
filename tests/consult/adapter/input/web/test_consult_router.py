@@ -42,8 +42,6 @@ def consult_repo():
 
 @pytest.fixture
 def ai_counselor():
-    """테스트용 AI Counselor"""
-    return FakeAICounselor()
     """테스트용 AI 상담사"""
     return FakeAICounselor(response="AI 응답입니다")
 
