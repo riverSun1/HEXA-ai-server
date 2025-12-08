@@ -58,7 +58,13 @@ def start_consult(user_id: str = Depends(get_current_user_id)):
             detail="Consult repository가 설정되지 않았습니다",
         )
 
-    use_case = StartConsultUseCase(_consult_repository)
+    if not _ai_counselor:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="AI counselor가 설정되지 않았습니다",
+        )
+
+    use_case = StartConsultUseCase(_consult_repository, _ai_counselor)
     result = use_case.execute(user_id=user_id, mbti=user.mbti, gender=user.gender)
 
     return result

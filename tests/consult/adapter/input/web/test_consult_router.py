@@ -42,6 +42,8 @@ def consult_repo():
 
 @pytest.fixture
 def ai_counselor():
+    """테스트용 AI Counselor"""
+    return FakeAICounselor()
     """테스트용 AI 상담사"""
     return FakeAICounselor(response="AI 응답입니다")
 
@@ -62,7 +64,7 @@ def client(app, user_repo, session_repo, consult_repo, ai_counselor):
 
 
 def test_start_consult_returns_session_id(client, user_repo, session_repo):
-    """인증된 사용자가 상담을 시작하면 세션 ID를 반환한다"""
+    """인증된 사용자가 상담을 시작하면 세션 ID와 AI 인사말을 반환한다"""
     # Given: 로그인한 사용자
     user = User(
         id="user-123",
@@ -82,11 +84,14 @@ def test_start_consult_returns_session_id(client, user_repo, session_repo):
         headers={"Authorization": "Bearer valid-session-123"}
     )
 
-    # Then: 200 OK와 세션 ID를 반환한다
+    # Then: 200 OK와 세션 ID, 인사말을 반환한다
     assert response.status_code == 200
     data = response.json()
     assert "session_id" in data
     assert data["session_id"] is not None
+    assert "greeting" in data
+    assert data["greeting"] is not None
+    assert len(data["greeting"]) > 0
 
 
 def test_start_consult_without_auth_returns_401(client):

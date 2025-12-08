@@ -148,13 +148,19 @@ client_id = settings.GOOGLE_CLIENT_ID
     - DB 연결 실패 시 적절한 에러 핸들링
   - **⚠️ 주의**: 이 작업은 Structural Change이므로 별도 커밋으로 분리
 
-- [ ] `HAIS-12` [Consult] AI 인사 메시지 추가
+- [x] `HAIS-12` [Consult] AI 인사 메시지 추가
   - **📖 유저 스토리**: "사용자로서, 세션을 시작하면 내 MBTI에 맞는 AI 인사말을 받고 싶다"
   - **Port**: `AICounselorPort` 인터페이스 정의 (generate_greeting 메서드)
-  - **Adapter**: `OpenAICounselorAdapter` 구현 (OpenAI API 연동)
-  - **UseCase**: `StartConsultUseCase` 생성
+  - **Adapter 구현**:
+    - `FakeAICounselor`: 테스트용 구현체 (고정 인사말)
+    - `OpenAICounselorAdapter`: 프로덕션 구현체 (OpenAI API 연동)
+      - MBTI 4차원 특성 프롬프트 (E/I, S/N, T/F, J/P)
+      - 차원별 톤 가이드라인 (활발함/차분함, 구체적/추상적, 논리적/감정적, 체계적/유연함)
+      - gpt-4o-mini 모델 사용
+  - **UseCase**: `StartConsultUseCase` 확장 (ai_counselor 주입)
   - **API 확장**: 응답에 `greeting` 필드 추가
-  - **✅ 인수 조건**: AI 인사말 포함, MBTI 특성 반영
+  - **테스트 스크립트**: OpenAI API 실제 테스트 스크립트 작성
+  - **✅ 인수 조건**: AI 인사말 포함, MBTI 4차원 특성 반영, OpenAI API 연동 성공
 
 - [x] `HAIS-13` [Consult] 메시지 전송 기본 **🔐 인증 필수**
   - **📖 유저 스토리**: "로그인한 사용자로서, 질문을 보내고 AI의 답변을 받고 싶다"
