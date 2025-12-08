@@ -110,7 +110,7 @@ Adapter (Web) → Application (UseCase) → Domain ← Infrastructure (DB, API)
   - **API 확장**: 응답에 `remaining_turns` 필드 추가
   - **✅ 인수 조건**: 턴 카운트 정확, 3턴 초과 시 400 에러
 
-- [ ] `HAIS-17` [Consult] 분석 결과 생성 (3시간)
+- [x] `HAIS-17` [Consult] 분석 결과 생성 (3시간)
   - **📖 유저 스토리**: "사용자로서, 3턴 완료 후 MBTI 기반 관계 분석을 받고 싶다"
   - **Domain**: `Analysis` (situation, traits, solutions, cautions)
   - **Port 확장**: `AICounselorPort.generate_analysis()`
