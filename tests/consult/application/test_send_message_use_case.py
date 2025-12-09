@@ -88,3 +88,21 @@ class TestSendMessageUseCase:
                 user_id="user-456",
                 content="안녕하세요"
             )
+
+    def test_send_message_rejects_when_session_completed(self):
+        """5턴 완료된 세션에 메시지를 보내면 에러를 발생시킨다"""
+        from app.consult.domain.message import Message
+
+        # Given: 5턴 완료된 세션
+        for i in range(5):
+            self.session.add_message(Message(role="user", content=f"질문 {i+1}"))
+            self.session.add_message(Message(role="assistant", content=f"답변 {i+1}"))
+        self.repository.save(self.session)
+
+        # When & Then: 6번째 메시지 전송 시 에러
+        with pytest.raises(ValueError, match="상담이 완료되었습니다"):
+            self.use_case.execute(
+                session_id="session-123",
+                user_id="user-456",
+                content="추가 질문"
+            )

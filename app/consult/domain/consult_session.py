@@ -41,3 +41,11 @@ class ConsultSession:
     def get_messages(self) -> list[Message]:
         """세션의 모든 메시지를 반환한다"""
         return list(self._messages)
+
+    def get_user_turn_count(self) -> int:
+        """유저 메시지(턴) 개수를 반환한다"""
+        return sum(1 for msg in self._messages if msg.role == "user")
+
+    def is_completed(self) -> bool:
+        """세션이 완료되었는지 (5턴 이상) 반환한다"""
+        return self.get_user_turn_count() >= 5

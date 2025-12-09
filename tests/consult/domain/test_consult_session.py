@@ -140,3 +140,78 @@ def test_consult_session_messages_maintain_order():
     assert messages[0].content == "첫 번째"
     assert messages[1].content == "두 번째"
     assert messages[2].content == "세 번째"
+
+
+def test_get_user_turn_count_returns_zero_for_empty_session():
+    """빈 세션의 유저 턴 카운트는 0이다"""
+    # Given: 메시지가 없는 세션
+    session = ConsultSession(
+        id="session-123",
+        user_id="user-456",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+
+    # When & Then: 유저 턴 카운트는 0
+    assert session.get_user_turn_count() == 0
+
+
+def test_get_user_turn_count_counts_only_user_messages():
+    """유저 메시지만 턴으로 카운트한다"""
+    from app.consult.domain.message import Message
+
+    # Given: user와 assistant 메시지가 섞인 세션
+    session = ConsultSession(
+        id="session-123",
+        user_id="user-456",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    session.add_message(Message(role="assistant", content="안녕하세요"))  # AI 인사
+    session.add_message(Message(role="user", content="첫 번째 질문"))
+    session.add_message(Message(role="assistant", content="첫 번째 답변"))
+    session.add_message(Message(role="user", content="두 번째 질문"))
+    session.add_message(Message(role="assistant", content="두 번째 답변"))
+
+    # When & Then: user 메시지만 카운트 = 2
+    assert session.get_user_turn_count() == 2
+
+
+def test_is_completed_returns_false_when_under_5_turns():
+    """5턴 미만이면 is_completed()는 False를 반환한다"""
+    from app.consult.domain.message import Message
+
+    # Given: 4턴 진행된 세션
+    session = ConsultSession(
+        id="session-123",
+        user_id="user-456",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    session.add_message(Message(role="assistant", content="인사"))
+    for i in range(4):
+        session.add_message(Message(role="user", content=f"질문 {i+1}"))
+        session.add_message(Message(role="assistant", content=f"답변 {i+1}"))
+
+    # When & Then: 아직 완료되지 않음
+    assert session.is_completed() is False
+
+
+def test_is_completed_returns_true_when_5_turns_reached():
+    """5턴 이상이면 is_completed()는 True를 반환한다"""
+    from app.consult.domain.message import Message
+
+    # Given: 5턴 진행된 세션
+    session = ConsultSession(
+        id="session-123",
+        user_id="user-456",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    session.add_message(Message(role="assistant", content="인사"))
+    for i in range(5):
+        session.add_message(Message(role="user", content=f"질문 {i+1}"))
+        session.add_message(Message(role="assistant", content=f"답변 {i+1}"))
+
+    # When & Then: 완료됨
+    assert session.is_completed() is True

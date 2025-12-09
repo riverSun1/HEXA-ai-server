@@ -105,9 +105,15 @@ def send_message(
         )
         return result
     except ValueError as e:
+        error_message = str(e)
+        if "상담이 완료되었습니다" in error_message:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=error_message,
+            )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(e),
+            detail=error_message,
         )
     except PermissionError as e:
         raise HTTPException(

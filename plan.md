@@ -177,20 +177,21 @@ client_id = settings.GOOGLE_CLIENT_ID
   - **API 확장**: SSE (Server-Sent Events) 응답 형식
   - **✅ 인수 조건**: 스트리밍 응답, EventSource로 수신 가능
 
-- [ ] `HAIS-15` [Consult] 턴 관리 및 제한
-  - **📖 유저 스토리**: "사용자로서, 3턴 대화 후 자동으로 분석 단계로 전환되길 원한다"
+- [x] `HAIS-15` [Consult] 턴 관리 및 제한
+  - **📖 유저 스토리**: "사용자로서, 5턴 대화 후 자동으로 분석 단계로 전환되길 원한다"
   - **Domain 확장**: `ConsultSession.get_user_turn_count()`, `is_completed()`
-  - **UseCase 확장**: 3턴 체크, 초과 시 에러
+  - **UseCase 확장**: 5턴 체크, 초과 시 에러
   - **API 확장**: 응답에 `remaining_turns` 필드 추가
-  - **✅ 인수 조건**: 턴 카운트 정확, 3턴 초과 시 400 에러
+  - **✅ 인수 조건**: 턴 카운트 정확, 5턴 초과 시 400 에러
 
-- [ ] `HAIS-16` [Consult] 분석 결과 생성
-  - **📖 유저 스토리**: "사용자로서, 3턴 완료 후 MBTI 기반 관계 분석을 받고 싶다"
+- [ ] `HAIS-16` [Consult] 5턴 완료 시 자동 분석
+  - **📖 유저 스토리**: "사용자로서, 5턴 완료 후 종료 안내와 함께 자동으로 분석 결과를 받고 싶다"
   - **Domain**: `Analysis` (situation, traits, solutions, cautions)
   - **Port 확장**: `AICounselorPort.generate_analysis()`
-  - **UseCase**: `GetAnalysisUseCase` 생성
-  - **API**: `GET /consult/{session_id}/analysis` → 200 (완료) / 404 (미완료)
-  - **✅ 인수 조건**: 3턴 완료 검증, 4개 섹션 포함, 대화 기반 분석
+  - **UseCase 확장**: `SendMessageUseCase` - 5턴째 메시지 시 분석 자동 생성
+  - **API 확장**: 5턴째 응답에 `is_completed: true`, `analysis` 필드 포함
+  - **응답 메시지**: "무료 상담이 종료되었습니다. 프로 결제 시 추가 상담 가능합니다. 지금까지 대화를 바탕으로 분석해드릴게요!"
+  - **✅ 인수 조건**: 5턴 완료 시 자동 분석, 4개 섹션 포함, 종료 안내 메시지
 
 #### Team Converter: 변환 기능 (Thin Slice 방식 🔄)
 

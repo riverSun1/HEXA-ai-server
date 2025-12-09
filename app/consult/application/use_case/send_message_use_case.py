@@ -20,10 +20,11 @@ class SendMessageUseCase:
 
         1. 세션 조회
         2. 세션 소유자 검증
-        3. 사용자 메시지 저장
-        4. AI 응답 생성
-        5. AI 응답 저장
-        6. 응답 반환
+        3. 세션 완료 여부 검증
+        4. 사용자 메시지 저장
+        5. AI 응답 생성
+        6. AI 응답 저장
+        7. 응답 반환
         """
         # 1. 세션 조회
         session = self._repository.find_by_id(session_id)
@@ -34,18 +35,25 @@ class SendMessageUseCase:
         if session.user_id != user_id:
             raise PermissionError("세션에 접근할 권한이 없습니다")
 
-        # 3. 사용자 메시지 저장
+        # 3. 세션 완료 여부 검증
+        if session.is_completed():
+            raise ValueError("상담이 완료되었습니다")
+
+        # 4. 사용자 메시지 저장
         user_message = Message(role="user", content=content)
         session.add_message(user_message)
 
-        # 4. AI 응답 생성
+        # 5. AI 응답 생성
         ai_response = self._ai_counselor.generate_response(session, content)
 
-        # 5. AI 응답 저장
+        # 6. AI 응답 저장
         assistant_message = Message(role="assistant", content=ai_response)
         session.add_message(assistant_message)
 
-        # 6. 세션 저장 (업데이트)
+        # 7. 세션 저장 (업데이트)
         self._repository.save(session)
 
-        return {"response": ai_response}
+        # 8. 남은 턴 수 계산
+        remaining_turns = max(0, 5 - session.get_user_turn_count())
+
+        return {"response": ai_response, "remaining_turns": remaining_turns}

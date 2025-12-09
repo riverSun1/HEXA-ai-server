@@ -251,3 +251,82 @@ def test_send_message_to_nonexistent_session_returns_404(client, user_repo, sess
 
     # Then: 404 Not Found를 반환한다
     assert response.status_code == 404
+
+
+def test_send_message_returns_remaining_turns(client, user_repo, session_repo, consult_repo):
+    """메시지 전송 시 남은 턴 수를 반환한다"""
+    # Given: 로그인한 사용자
+    user = User(
+        id="user-123",
+        email="test@example.com",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    user_repo.save(user)
+
+    # Given: 유효한 인증 세션
+    auth_session = Session(session_id="valid-session-123", user_id="user-123")
+    session_repo.save(auth_session)
+
+    # Given: 상담 세션
+    consult_session = ConsultSession(
+        id="consult-session-123",
+        user_id="user-123",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    consult_repo.save(consult_session)
+
+    # When: 첫 번째 메시지 전송
+    response = client.post(
+        "/consult/consult-session-123/message",
+        headers={"Authorization": "Bearer valid-session-123"},
+        json={"content": "첫 번째 질문"}
+    )
+
+    # Then: 남은 턴 수가 4이다
+    assert response.status_code == 200
+    data = response.json()
+    assert "remaining_turns" in data
+    assert data["remaining_turns"] == 4
+
+
+def test_send_message_to_completed_session_returns_400(client, user_repo, session_repo, consult_repo):
+    """5턴 완료된 세션에 메시지를 보내면 400을 반환한다"""
+    from app.consult.domain.message import Message
+
+    # Given: 로그인한 사용자
+    user = User(
+        id="user-123",
+        email="test@example.com",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    user_repo.save(user)
+
+    # Given: 유효한 인증 세션
+    auth_session = Session(session_id="valid-session-123", user_id="user-123")
+    session_repo.save(auth_session)
+
+    # Given: 5턴 완료된 상담 세션
+    consult_session = ConsultSession(
+        id="consult-session-123",
+        user_id="user-123",
+        mbti=MBTI("INTJ"),
+        gender=Gender("MALE")
+    )
+    for i in range(5):
+        consult_session.add_message(Message(role="user", content=f"질문 {i+1}"))
+        consult_session.add_message(Message(role="assistant", content=f"답변 {i+1}"))
+    consult_repo.save(consult_session)
+
+    # When: 6번째 메시지를 보내면
+    response = client.post(
+        "/consult/consult-session-123/message",
+        headers={"Authorization": "Bearer valid-session-123"},
+        json={"content": "추가 질문"}
+    )
+
+    # Then: 400 Bad Request를 반환한다
+    assert response.status_code == 400
+    assert "상담이 완료되었습니다" in response.json()["detail"]
