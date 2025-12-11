@@ -1,5 +1,8 @@
 from fastapi import Header, Cookie, HTTPException, status
 
+from app.auth.infrastructure.repository.mysql_session_repository import MySqlSessionRepository
+from config.database import get_db_session
+
 from app.auth.application.port.session_repository_port import SessionRepositoryPort
 
 # Session repository - will be set via dependency injection
@@ -45,13 +48,19 @@ def get_current_user_id(
         )
 
     # 세션 저장소 검증
-    if not _session_repository:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="세션 저장소가 설정되지 않았습니다",
-        )
+    # 세션 저장소 준비 (주입된 fake/테스트 우선)
+    repo = _session_repository
+    created_db = None
+    if repo is None:
+        created_db = get_db_session()
+        repo = MySqlSessionRepository(created_db)
 
-    session = _session_repository.find_by_session_id(session_id)
+    try:
+        session = repo.find_by_session_id(session_id)
+    finally:
+        if created_db:
+            created_db.close()
+
     if not session:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

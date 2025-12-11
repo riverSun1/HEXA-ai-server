@@ -1,5 +1,4 @@
 import pytest
-import fakeredis
 from fastapi import Depends, FastAPI
 from fastapi.testclient import TestClient
 
@@ -8,16 +7,13 @@ from app.auth.adapter.input.web.auth_dependency import (
     set_session_repository,
 )
 from app.auth.domain.session import Session
-from app.auth.infrastructure.repository.redis_session_repository import (
-    RedisSessionRepository,
-)
+from tests.auth.fixtures.fake_session_repository import FakeSessionRepository
 
 
 @pytest.fixture
 def session_repo():
-    """테스트용 세션 저장소 (fakeredis 사용)"""
-    redis_client = fakeredis.FakeRedis(decode_responses=True)
-    return RedisSessionRepository(redis_client)
+    """테스트용 세션 저장소"""
+    return FakeSessionRepository()
 
 
 @pytest.fixture
