@@ -72,6 +72,9 @@ class OpenAIMessageConverter(MessageConverterPort):
         # MBTI 차원별 특성 추출
         receiver_characteristics = self._get_mbti_characteristics(receiver_mbti)
 
+        # 톤별 가이드라인 정의
+        tone_guidelines = self._get_tone_guidelines(tone)
+
         return f"""다음 메시지를 '{tone}' 톤으로 변환해주세요.
 
 발신자 MBTI: {sender_mbti.value}
@@ -82,14 +85,55 @@ class OpenAIMessageConverter(MessageConverterPort):
 
 원본 메시지: {original_message}
 
-수신자의 MBTI 특성을 고려하여 효과적으로 전달될 수 있도록 메시지를 변환하고,
-왜 이 표현이 {receiver_mbti.value} 유형에게 효과적인지 설명해주세요.
+[{tone} 톤 변환 가이드라인]
+{tone_guidelines}
+
+위 가이드라인을 정확히 따라 메시지를 변환하고,
+수신자의 MBTI 특성과 선택한 톤을 고려하여 왜 이 표현이 {receiver_mbti.value} 유형에게 효과적인지 설명해주세요.
 
 JSON 형식으로 응답:
 {{
     "content": "변환된 메시지",
     "explanation": "왜 이 표현이 효과적인지 설명 (2-3줄)"
 }}"""
+
+    def _get_tone_guidelines(self, tone: str) -> str:
+        """톤별 변환 가이드라인을 반환
+
+        Args:
+            tone: 톤 ("공손한", "캐주얼한", "간결한")
+
+        Returns:
+            str: 톤별 구체적인 가이드라인
+        """
+        guidelines = {
+            "공손한": """
+• 존댓말 사용 (요체, 합니다체)
+• 정중한 표현과 겸손한 어조 유지
+• "~해주실 수 있을까요?", "~드립니다", "감사합니다" 등의 표현 사용
+• 격식 있는 문장 구조
+• 예시: "안녕하세요. 다음 주 회의 일정을 조율하고자 연락드렸습니다. 가능하신 시간을 알려주시면 감사하겠습니다."
+            """,
+            "캐주얼한": """
+• 반말 또는 편한 말투 사용
+• 친근하고 부담 없는 어조
+• 이모지나 구어체 표현 활용 가능
+• 자연스럽고 편안한 문장 구조
+• 예시: "안녕! 다음 주 회의 시간 어때? 네가 편한 시간 알려줘~"
+            """,
+            "간결한": """
+• 핵심 내용만 짧고 명확하게 전달
+• 불필요한 수식어나 부연 설명 제거
+• 명사형 종결이나 짧은 문장 사용
+• 최소한의 단어로 의미 전달
+• 예시: "다음 주 회의 시간 조율 필요. 가능한 시간대 공유 부탁드림."
+            """,
+        }
+
+        return guidelines.get(
+            tone,
+            "• 메시지의 의미를 유지하면서 자연스럽게 변환해주세요.",
+        )
 
     def _get_mbti_characteristics(self, mbti: MBTI) -> str:
         """MBTI 차원별 특성을 문자열로 반환
