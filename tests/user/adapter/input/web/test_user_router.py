@@ -104,3 +104,37 @@ def test_update_profile_invalid_mbti_returns_400(client, user_repo, session_repo
 
     assert response.status_code == 400
 
+
+def test_get_profile_success(client, user_repo, session_repo):
+    user = User(id="user-123", email="test@example.com")
+    user_repo.save(user)
+    session_repo.save(Session(session_id="valid-session", user_id="user-123"))
+
+    response = client.get(
+        "/user/profile",
+        headers={"Authorization": "Bearer valid-session"},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["id"] == "user-123"
+    assert data["email"] == "test@example.com"
+    assert data["mbti"] is None
+    assert data["gender"] is None
+
+
+def test_get_profile_requires_auth(client):
+    response = client.get("/user/profile")
+    assert response.status_code == 401
+
+
+def test_get_profile_user_not_found_returns_404(client, session_repo):
+    session_repo.save(Session(session_id="valid-session", user_id="missing-user"))
+
+    response = client.get(
+        "/user/profile",
+        headers={"Authorization": "Bearer valid-session"},
+    )
+
+    assert response.status_code == 404
+

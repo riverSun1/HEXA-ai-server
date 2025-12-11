@@ -18,6 +18,30 @@ class UpdateProfileRequest(BaseModel):
     gender: str
 
 
+@user_router.get("/profile")
+def get_profile(user_id: str = Depends(get_current_user_id)):
+    """현재 로그인한 사용자의 프로필 조회"""
+    if not _user_repository:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="User repository가 설정되지 않았습니다",
+        )
+
+    user = _user_repository.find_by_id(user_id)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="사용자를 찾을 수 없습니다",
+        )
+
+    return {
+        "id": user.id,
+        "email": user.email,
+        "mbti": user.mbti.value if user.mbti else None,
+        "gender": user.gender.value if user.gender else None,
+    }
+
+
 @user_router.put("/profile")
 def update_profile(
     request: UpdateProfileRequest,

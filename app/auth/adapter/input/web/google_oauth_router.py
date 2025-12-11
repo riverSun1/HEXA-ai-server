@@ -11,6 +11,9 @@ from app.auth.infrastructure.repository.redis_session_repository import (
 from app.auth.domain.session import Session
 from config.redis import get_redis_client
 from config.settings import get_settings
+from config.database import get_db_session
+from app.user.infrastructure.repository.mysql_user_repository import MySQLUserRepository
+from app.user.domain.user import User
 
 google_oauth_router = APIRouter()
 
@@ -45,6 +48,19 @@ async def google_callback(code: str, state: str | None = None):
     google_id = profile.get("sub")
     name = profile.get("name")
 
+    # User 조회 또는 생성 (DB)
+    db_session = get_db_session()
+    try:
+        user_repo = MySQLUserRepository(db_session)
+        existing_user = user_repo.find_by_email(email)
+        if existing_user:
+            user_db_id = existing_user.id
+        else:
+            user_db_id = google_id
+            user_repo.save(User(id=user_db_id, email=email))
+    finally:
+        db_session.close()
+
     # Session 생성
     session_id = str(uuid.uuid4())
 
@@ -53,7 +69,8 @@ async def google_callback(code: str, state: str | None = None):
         f"session:{session_id}",
         6 * 60 * 60,  # 6시간
         json.dumps({
-            "user_id": google_id,
+            "session_id": session_id,
+            "user_id": user_db_id,
             "email": email,
             "name": name,
             "access_token": access_token.access_token,
