@@ -75,35 +75,44 @@ class OpenAICounselorAdapter(AICounselorPort):
             "P": "유연하고 탐색적인 대화를 시작하며"
         }
 
-        return f"""사용자가 MBTI 관계 상담을 시작합니다.
+        return f"""사용자가 MBTI 관계 상담을 시작해.
 
 사용자 정보:
 - MBTI: {mbti.value}
 - 성별: {gender.value}
 
-이 사용자의 MBTI 특성에 맞춰 첫 인사말을 생성해주세요.
+첫 인사말을 생성해줘.
 
-MBTI 특성 고려사항:
+MBTI 특성 고려사항 (톤 조절용, 내용에 직접 언급하지 마):
 - E/I ({ei}): {ei_guide[ei]}
 - S/N ({sn}): {sn_guide[sn]}
 - T/F ({tf}): {tf_guide[tf]}
 - J/P ({jp}): {jp_guide[jp]}
 
 요구사항:
-1. 2-3문장으로 간결하게
-2. 사용자의 MBTI 유형을 언급하며 공감 표현
-3. "어떤 관계 고민이 있어?" 같은 자연스러운 질문으로 마무리
-4. 이모지는 최대 1-2개만 사용 (과하지 않게)
-5. 반말만 사용 (존댓말 금지, 친근하고 편안한 분위기)
+1. 1-2문장으로 짧고 자연스럽게
+2. MBTI 특성 칭찬 금지 (어색함)
+3. "무슨 고민이야?" 또는 "어떤 일이야?" 같은 자연스러운 질문으로 마무리
+4. 이모지 사용 금지
+5. 반말만 사용 (친구처럼 편하게)
 
-인사말을 생성해주세요:"""
+좋은 예시:
+- "안녕! 나는 MBTI 전문 상담사야. 무슨 관계 고민이 있어?"
+- "반가워! 오늘 어떤 이야기 하고 싶어?"
+
+나쁜 예시 (금지):
+- "INTJ인 너의 논리적인 사고방식이 멋져!" (과한 칭찬, 어색함)
+- "깊이 있는 통찰력을 가진 너!" (처음 보는 사람한테 이상함)
+
+인사말:"""
 
     def generate_response(self, session: ConsultSession, user_message: str) -> str:
         """
         사용자 메시지에 대한 AI 응답을 생성한다.
+        주의: session에 이미 user_message가 추가된 상태로 호출되어야 함
         """
         messages = self._build_messages(session)
-        messages.append({"role": "user", "content": user_message})
+        # session.get_messages()에 이미 user_message가 포함되어 있으므로 추가하지 않음
 
         response = self._client.chat.completions.create(
             model="gpt-4o-mini",
@@ -117,9 +126,10 @@ MBTI 특성 고려사항:
     def generate_response_stream(self, session: ConsultSession, user_message: str) -> Iterator[str]:
         """
         사용자 메시지에 대한 AI 응답을 스트리밍 방식으로 생성한다.
+        주의: session에 이미 user_message가 추가된 상태로 호출되어야 함
         """
         messages = self._build_messages(session)
-        messages.append({"role": "user", "content": user_message})
+        # session.get_messages()에 이미 user_message가 포함되어 있으므로 추가하지 않음
 
         stream = self._client.chat.completions.create(
             model="gpt-4o-mini",
@@ -148,6 +158,8 @@ MBTI 특성 고려사항:
 사용자 정보:
 - MBTI: {session.mbti.value}
 - 성별: {session.gender.value}
+
+⚠️ 현재 {turn_count}턴 / 총 5턴 ({"마지막 턴 - 반드시 마무리만!" if turn_count >= 5 else f"남은 턴: {5 - turn_count}"})
 
 상담 원칙:
 1. 매번 다른 접근으로 질문하기 - 단순히 "더 자세히 말해줄래?" 같은 반복적 질문 금지
