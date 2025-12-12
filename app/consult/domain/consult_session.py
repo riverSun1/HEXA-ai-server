@@ -14,6 +14,7 @@ class ConsultSession:
         mbti: MBTI,
         gender: Gender,
         created_at: datetime | None = None,
+        messages: list[Message] | None = None,
     ):
         self._validate(id, user_id, mbti, gender)
         self.id = id
@@ -21,7 +22,7 @@ class ConsultSession:
         self.mbti = mbti
         self.gender = gender
         self.created_at = created_at or datetime.now()
-        self._messages: list[Message] = []
+        self._messages: list[Message] = messages or []
 
     def _validate(self, id: str, user_id: str, mbti: MBTI | None, gender: Gender | None) -> None:
         """ConsultSession 값의 유효성을 검증한다"""
