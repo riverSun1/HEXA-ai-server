@@ -7,12 +7,16 @@ class Analysis:
         traits: str,
         solutions: str,
         cautions: str,
+        compatibility: str | None = None,
+        scripts: str | None = None,
     ):
         self._validate(situation, traits, solutions, cautions)
         self.situation = situation
         self.traits = traits
         self.solutions = solutions
         self.cautions = cautions
+        self.compatibility = compatibility  # 상대방 MBTI 궁합 분석 (optional)
+        self.scripts = scripts  # 대화 스크립트 제안 (optional)
 
     def _validate(self, situation: str, traits: str, solutions: str, cautions: str) -> None:
         if not situation or not situation.strip():
@@ -26,9 +30,14 @@ class Analysis:
 
     def to_dict(self) -> dict:
         """Analysis를 dict로 변환한다"""
-        return {
+        result = {
             "situation": self.situation,
             "traits": self.traits,
             "solutions": self.solutions,
             "cautions": self.cautions,
         }
+        if self.compatibility:
+            result["compatibility"] = self.compatibility
+        if self.scripts:
+            result["scripts"] = self.scripts
+        return result
